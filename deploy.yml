@@ -1,0 +1,36 @@
+---
+- name: Configure and Run Docker Container
+  hosts: client_machine
+  become: yes
+
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Create Unix user 'demo'
+      user:
+        name: demo
+        shell: /bin/bash
+        createhome: yes
+
+    - name: Deploy Spring Boot App
+      copy:
+        src: /home/ansible/finaldocker-springboot/target/docker_assignment-0.0.1-SNAPSHOT.war
+        dest: /home/demo/app.war
+      notify: Restart Spring Boot App
+
+    - name: Run Docker Container
+      docker_container:
+        name: spring-app
+        image: docker.io/mohammedsait/ansible2  # Replace with your Docker image
+        state: started
+        ports:
+          - "8080:8080"
+
+  handlers:
+    - name: Restart Spring Boot App
+      service:
+        name: finaldocker-springboot  # Replace with your service name if needed
+        state: restarted
